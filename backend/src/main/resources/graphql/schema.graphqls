@@ -1,0 +1,68 @@
+type Product {
+    id: ID
+    name: String
+    brand: String
+    category: String
+    unitSize: String
+    storeName: String
+    price: Float
+    clubPrice: Float
+    unitPrice: Float
+    date: String
+}
+
+input BasketItemInput {
+    productName: String!
+    quantity: Float!
+    unit: String
+}
+
+input GraphqlBasketRequest {
+    items: [BasketItemInput!]!
+}
+
+type ItemDetailDto {
+    productName: String
+    quantity: Int
+    regularPrice: Float
+    clubPrice: Float
+    regularSubtotal: Float
+    clubSubtotal: Float
+}
+
+type StoreComparisonResultDto {
+    storeName: String
+    totalRegularPrice: Float
+    totalClubPrice: Float
+    items: [ItemDetailDto]
+}
+
+type BasketComparisonResponseDto {
+    cheapestStoreRegular: String
+    lowestRegularTotal: Float
+    cheapestStoreClub: String
+    lowestClubTotal: Float
+    storeSummaries: [StoreComparisonResultDto]
+}
+
+type Query {
+    getAllProducts: [Product]
+    getProductPriceHistory(productName: String!): [Product]
+}
+
+type Mutation {
+    clearAllData: String
+    addProduct(
+        name: String!, 
+        brand: String, 
+        category: String, 
+        unitSize: String, 
+        storeName: String!, 
+        price: Float!, 
+        clubPrice: Float, 
+        unitPrice: Float,
+        date: String
+    ): Product
+    
+    compareBasket(input: GraphqlBasketRequest!, targetDate: String): BasketComparisonResponseDto
+}
