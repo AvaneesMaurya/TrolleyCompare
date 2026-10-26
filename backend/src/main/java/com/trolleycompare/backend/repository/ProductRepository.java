@@ -11,4 +11,5 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByNameContainingIgnoreCaseAndDate(String name, LocalDate date);
     List<Product> findByNameContainingIgnoreCaseOrderByDateDesc(String name);
+    List<Product> findByDate(LocalDate date);
 }

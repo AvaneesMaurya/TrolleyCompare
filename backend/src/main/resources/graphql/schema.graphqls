@@ -1,68 +1,34 @@
-type Product {
-    id: ID
-    name: String
-    brand: String
-    category: String
-    unitSize: String
+type ProductComparisonResponse {
     storeName: String
-    price: Float
-    clubPrice: Float
-    unitPrice: Float
-    date: String
-}
-
-input BasketItemInput {
-    productName: String!
-    quantity: Float!
-    unit: String
-}
-
-input GraphqlBasketRequest {
-    items: [BasketItemInput!]!
-}
-
-type ItemDetailDto {
     productName: String
-    quantity: Int
-    regularPrice: Float
-    clubPrice: Float
-    regularSubtotal: Float
-    clubSubtotal: Float
+    storePackageQuantity: Float
+    storePackageUnit: String
+    calculatedRegularPrice: Float
+    calculatedClubPrice: Float
 }
 
-type StoreComparisonResultDto {
+input ItemInput {
+    name: String!
+    quantity: Float!
+    unit: String!
+}
+
+type BasketItemResult {
+    productName: String
+    storePackageQuantity: Float
+    storePackageUnit: String
+    calculatedRegularPrice: Float
+    calculatedClubPrice: Float
+}
+
+type StoreBasketComparison {
     storeName: String
     totalRegularPrice: Float
     totalClubPrice: Float
-    items: [ItemDetailDto]
-}
-
-type BasketComparisonResponseDto {
-    cheapestStoreRegular: String
-    lowestRegularTotal: Float
-    cheapestStoreClub: String
-    lowestClubTotal: Float
-    storeSummaries: [StoreComparisonResultDto]
+    items: [BasketItemResult]
 }
 
 type Query {
-    getAllProducts: [Product]
-    getProductPriceHistory(productName: String!): [Product]
-}
-
-type Mutation {
-    clearAllData: String
-    addProduct(
-        name: String!, 
-        brand: String, 
-        category: String, 
-        unitSize: String, 
-        storeName: String!, 
-        price: Float!, 
-        clubPrice: Float, 
-        unitPrice: Float,
-        date: String
-    ): Product
-    
-    compareBasket(input: GraphqlBasketRequest!, targetDate: String): BasketComparisonResponseDto
+    compareProduct(name: String!, quantity: Float!, unit: String!): [ProductComparisonResponse]
+    compareBasket(items: [ItemInput!]!): [StoreBasketComparison]
 }
