@@ -13,8 +13,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/graphql/**")
+                registry.addMapping("/api/**")
                         .allowedOrigins("http://localhost:3000", "http://localhost:5173") // Supports React & Vite defaults
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+                registry.addMapping("/graphql/**")
+                        .allowedOrigins("http://localhost:3000", "http://localhost:5173")
                         .allowedMethods("GET", "POST", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
