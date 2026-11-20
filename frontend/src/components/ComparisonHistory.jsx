@@ -7,22 +7,22 @@ export default function ComparisonHistory({ onViewComparison }) {
   const [loading, setLoading] = useState(true);
 
   const loadHistory = useCallback(async () => {
-    const records = await requestApi('/history');
-    setHistory(records);
+    return requestApi('/history');
   }, []);
 
   useEffect(() => {
     let active = true;
     const fetchHistory = async () => {
       try {
-        await loadHistory();
+        const records = await loadHistory();
+        if (active) setHistory(records);
       } catch (requestError) {
         if (active) setError(requestError.message);
       } finally {
         if (active) setLoading(false);
       }
     };
-    fetchHistory();
+    void fetchHistory();
     return () => { active = false; };
   }, [loadHistory]);
 

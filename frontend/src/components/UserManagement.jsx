@@ -11,20 +11,20 @@ export default function UserManagement({ currentUserId }) {
   const [busy, setBusy] = useState(false);
 
   const loadUsers = useCallback(async () => {
-    const results = await requestApi('/admin/users');
-    setUsers(results);
+    return requestApi('/admin/users');
   }, []);
 
   useEffect(() => {
     let active = true;
     const fetchUsers = async () => {
       try {
-        await loadUsers();
+        const results = await loadUsers();
+        if (active) setUsers(results);
       } catch (requestError) {
         if (active) setError(requestError.message);
       }
     };
-    fetchUsers();
+    void fetchUsers();
     return () => { active = false; };
   }, [loadUsers]);
 
@@ -48,12 +48,12 @@ export default function UserManagement({ currentUserId }) {
       const body = editingId
         ? { ...form, password: form.password || null }
         : { name: form.name, email: form.email, password: form.password };
-      await requestApi(editingId ? `/admin/users/${editingId}` : '/admin/users', {
+      await requestApi(editingId ? `/admin/users/${encodeURIComponent(editingId)}` : '/admin/users', {
         method: editingId ? 'PUT' : 'POST',
         body: JSON.stringify(body)
       });
       resetForm();
-      await loadUsers();
+      setUsers(await loadUsers());
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -65,8 +65,8 @@ export default function UserManagement({ currentUserId }) {
     if (!window.confirm(`Delete the account for ${user.email}? This cannot be undone.`)) return;
     setError('');
     try {
-      await requestApi(`/admin/users/${user.id}`, { method: 'DELETE' });
-      await loadUsers();
+      await requestApi(`/admin/users/${encodeURIComponent(user.id)}`, { method: 'DELETE' });
+      setUsers(await loadUsers());
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -113,7 +113,7 @@ export default function UserManagement({ currentUserId }) {
           </>
         )}
         <div className="flex items-end gap-2">
-          <button disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+          <button type="submit" disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
             {editingId ? 'Save changes' : 'Create user'}
           </button>
           {editingId && <button type="button" onClick={resetForm} className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">Cancel</button>}
@@ -148,8 +148,8 @@ export default function UserManagement({ currentUserId }) {
                   <td className="px-4 py-3 text-right">
                     {isCurrentUser ? <span className="text-xs text-gray-400">Current account protected</span> : (
                       <div className="flex justify-end gap-3">
-                        <button onClick={() => editUser(user)} className="font-medium text-indigo-600 hover:text-indigo-800">Edit</button>
-                        {!isSuperAdmin && <button onClick={() => deleteUser(user)} className="font-medium text-red-600 hover:text-red-800">Delete</button>}
+                        <button type="button" onClick={() => editUser(user)} className="font-medium text-indigo-600 hover:text-indigo-800">Edit</button>
+                        {!isSuperAdmin && <button type="button" onClick={() => deleteUser(user)} className="font-medium text-red-600 hover:text-red-800">Delete</button>}
                       </div>
                     )}
                   </td>

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function BasketList({ basketItems, onRemoveItem, onClearBasket, onCompare }) {
   if (!basketItems || basketItems.length === 0) {
     return null;

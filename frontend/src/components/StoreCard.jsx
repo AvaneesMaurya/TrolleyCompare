@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function StoreCard({ store, cheapestStoreName }) {
   const isCheapest = store.storeName === cheapestStoreName;
 

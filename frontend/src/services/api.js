@@ -1,5 +1,20 @@
-const GRAPHQL_ENDPOINT = 'http://localhost:8080/graphql';
-const API_ENDPOINT = 'http://localhost:8080/api';
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:8080';
+const allowedOrigin = new URL(API_ORIGIN);
+if (!['http:', 'https:'].includes(allowedOrigin.protocol)) {
+  throw new Error('Invalid API origin configuration.');
+}
+const GRAPHQL_ENDPOINT = `${allowedOrigin.origin}/graphql`;
+const API_ENDPOINT = `${allowedOrigin.origin}/api`;
+const STATIC_API_PATHS = new Set([
+  '/auth/csrf',
+  '/auth/me',
+  '/auth/logout',
+  '/auth/register',
+  '/auth/login',
+  '/history',
+  '/history/searches',
+  '/admin/users'
+]);
 
 let csrfToken = null;
 
@@ -15,6 +30,11 @@ export async function refreshCsrfToken() {
 }
 
 export async function requestApi(path, options = {}) {
+  const isUserPath = /^\/admin\/users\/[A-Za-z0-9_-]+$/.test(path);
+  if (!STATIC_API_PATHS.has(path) && !isUserPath) {
+    throw new Error('Unsupported API path.');
+  }
+
   const method = (options.method || 'GET').toUpperCase();
   const headers = new Headers(options.headers || {});
   if (options.body !== undefined && !headers.has('Content-Type')) {
@@ -61,10 +81,15 @@ export const COMPARE_BASKET_QUERY = `
 
 export async function callGraphql(query, variables = {}) {
   try {
+    if (!csrfToken) await refreshCsrfToken();
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, variables })
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': csrfToken
+      },
+      body: JSON.stringify({ query, variables }),
+      credentials: 'include'
     });
 
     const json = await response.json();

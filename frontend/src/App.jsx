@@ -35,7 +35,7 @@ export default function App() {
         if (active) setAuthLoading(false);
       }
     };
-    loadSession();
+    void loadSession();
     return () => { active = false; };
   }, []);
 
@@ -60,7 +60,7 @@ export default function App() {
       return () => { active = false; };
     }
 
-    requestApi('/history/searches')
+    void requestApi('/history/searches')
       .then((searches) => {
         if (active) setRecentSearches(searches);
       })

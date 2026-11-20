@@ -14,9 +14,11 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
   const handleAddCustomItem = (e) => {
     e.preventDefault();
     if (!itemName.trim()) return;
+    const quantity = Number.parseFloat(itemQty);
+    if (!Number.isFinite(quantity) || quantity < 1) return;
     setBasketItems((prev) => [
       ...prev,
-      { productName: itemName.trim(), quantity: parseFloat(itemQty), unit: itemUnit }
+      { productName: itemName.trim(), quantity, unit: itemUnit }
     ]);
     setItemName('');
     setItemQty(1);
@@ -30,15 +32,16 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
     <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1 space-y-4">
       <h2 className="text-base sm:text-lg font-bold text-gray-900 flex justify-between items-center">
         <span>🛍️ Shopping Basket</span>
-        <button onClick={() => setBasketItems([])} className="text-xs text-red-500 hover:underline">
+        <button type="button" onClick={() => setBasketItems([])} className="text-xs text-red-500 hover:underline">
           Clear
         </button>
       </h2>
 
       <form onSubmit={handleAddCustomItem} className="space-y-3">
         <div>
-          <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Product Keyword</label>
+          <label htmlFor="basket-product-keyword" className="block text-xs font-semibold uppercase text-gray-500 mb-1">Product Keyword</label>
           <input 
+            id="basket-product-keyword"
             type="text" 
             value={itemName} 
             onChange={(e) => setItemName(e.target.value)} 
@@ -48,8 +51,9 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Qty</label>
+            <label htmlFor="basket-product-quantity" className="block text-xs font-semibold uppercase text-gray-500 mb-1">Qty</label>
             <input 
+              id="basket-product-quantity"
               type="number" 
               value={itemQty} 
               onChange={(e) => setItemQty(e.target.value)} 
@@ -58,8 +62,9 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase text-gray-500 mb-1">Unit</label>
+            <label htmlFor="basket-product-unit" className="block text-xs font-semibold uppercase text-gray-500 mb-1">Unit</label>
             <select 
+              id="basket-product-unit"
               value={itemUnit} 
               onChange={(e) => setItemUnit(e.target.value)} 
               className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500">
@@ -97,7 +102,7 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
             basketItems.map((item, idx) => (
               <div key={idx} className="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border text-sm">
                 <span className="font-medium text-gray-700 truncate mr-2">{item.productName} ({item.quantity} {item.unit})</span>
-                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold text-xs px-2 py-1 flex-shrink-0">✕</button>
+                <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold text-xs px-2 py-1 flex-shrink-0">✕</button>
               </div>
             ))
           )}
@@ -105,6 +110,7 @@ export default function BasketBuilder({ basketItems, setBasketItems, onCompare }
       </div>
 
       <button 
+        type="button"
         onClick={onCompare} 
         className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition shadow-sm text-sm">
         Compare Supermarkets 🚀

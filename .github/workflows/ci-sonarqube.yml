@@ -1,0 +1,108 @@
+name: CI and SonarQube
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-scan:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Start PostgreSQL
+        shell: pwsh
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+        run: |
+          docker rm -f trolleycompare-ci-postgres 2>$null
+          docker run --name trolleycompare-ci-postgres `
+            -e POSTGRES_USER=postgres `
+            -e POSTGRES_PASSWORD="$env:POSTGRES_PASSWORD" `
+            -e POSTGRES_DB=postgres `
+            -p 5432:5432 `
+            -d postgres:18
+
+          $ready = $false
+          for ($attempt = 1; $attempt -le 30; $attempt++) {
+            docker exec trolleycompare-ci-postgres pg_isready -U postgres
+            if ($LASTEXITCODE -eq 0) {
+              $ready = $true
+              break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $ready) {
+            throw "PostgreSQL did not become ready"
+          }
+
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+        run: .\mvnw.cmd test
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Start SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: docker compose -f compose.sonarqube.yml up -d sonarqube
+
+      - name: Wait for SonarQube
+        shell: pwsh
+        run: |
+          $ready = $false
+          for ($attempt = 1; $attempt -le 60; $attempt++) {
+            try {
+              $response = Invoke-RestMethod -Uri "http://localhost:9000/api/system/status" -TimeoutSec 5
+              if ($response.status -eq "UP") {
+                $ready = $true
+                break
+              }
+            } catch {}
+            Start-Sleep -Seconds 5
+          }
+          if (-not $ready) {
+            throw "SonarQube did not become ready"
+          }
+
+      - name: Run SonarQube scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: docker compose -f compose.sonarqube.yml run --rm sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
+
+      - name: Stop PostgreSQL
+        if: always()
+        shell: pwsh
+        run: docker rm -f trolleycompare-ci-postgres 2>$null

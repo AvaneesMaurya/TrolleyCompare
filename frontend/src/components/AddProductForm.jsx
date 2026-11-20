@@ -28,7 +28,9 @@ export default function AddProductForm({ onAddItem, recentSearches = [] }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!itemName.trim()) return;
-    onAddItem(itemName.trim(), parseFloat(itemQty), itemUnit);
+    const quantity = Number.parseFloat(itemQty);
+    if (!Number.isFinite(quantity) || quantity < 1) return;
+    onAddItem(itemName.trim(), quantity, itemUnit);
     setItemName('');
     setItemQty(1);
   };
@@ -39,10 +41,11 @@ export default function AddProductForm({ onAddItem, recentSearches = [] }) {
         
         {/* Box 1: Product Keyword */}
         <div className="relative w-full">
-          <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
+          <label htmlFor="product-keyword" className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
             Product Keyword
           </label>
           <input
+            id="product-keyword"
             type="text" 
             value={itemName} 
             onChange={(e) => {
@@ -85,10 +88,11 @@ export default function AddProductForm({ onAddItem, recentSearches = [] }) {
 
         {/* Box 2: Quantity */}
         <div className="w-full">
-          <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
+          <label htmlFor="product-quantity" className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
             Quantity
           </label>
           <input 
+            id="product-quantity"
             type="number" 
             value={itemQty} 
             onChange={(e) => setItemQty(e.target.value)} 
@@ -99,10 +103,11 @@ export default function AddProductForm({ onAddItem, recentSearches = [] }) {
 
         {/* Box 3: Unit */}
         <div className="w-full">
-          <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
+          <label htmlFor="product-unit" className="block text-[9px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">
             Unit
           </label>
           <select 
+            id="product-unit"
             value={itemUnit} 
             onChange={(e) => setItemUnit(e.target.value)} 
             className="w-full h-8 px-2.5 border border-gray-300 rounded-lg text-[11px] text-gray-800 bg-gray-50/50 outline-none focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition box-border cursor-pointer">

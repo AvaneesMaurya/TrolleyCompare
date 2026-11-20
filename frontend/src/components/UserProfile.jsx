@@ -54,7 +54,7 @@ export default function UserProfile({ user, onProfileUpdated }) {
         </label>
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm text-gray-500">Role: <span className="font-semibold text-gray-700">{user.role === 'SUPER_ADMIN' ? 'Super admin' : 'User'}</span></p>
-          <button disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+          <button type="submit" disabled={busy} className="rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
             {busy ? 'Saving…' : 'Save changes'}
           </button>
         </div>
