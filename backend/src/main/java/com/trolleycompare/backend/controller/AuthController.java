@@ -87,7 +87,7 @@ public class AuthController {
             @RequestBody UpdateProfileRequest request,
             @org.springframework.security.core.annotation.AuthenticationPrincipal UserPrincipal principal) {
         if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please sign in.");
         }
         return UserResponse.from(userService.updateProfile(principal.id(), request));
     }
