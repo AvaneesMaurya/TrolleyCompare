@@ -48,7 +48,15 @@ Only run the last command if you intend to erase the local database.
 The workflow at [.github/workflows/deploy.yml](.github/workflows/deploy.yml) deploys pushes to `main`. Before enabling it:
 
 1. Configure the EC2 security group to allow SSH (port 22) from GitHub Actions runners and web traffic on ports 80 and 8080. Restrict SSH to trusted runner IP ranges where possible.
-2. Install Docker Engine and the Docker Compose plugin on EC2. The configured SSH user must be able to run `sudo docker compose`.
+2. Install Docker Engine and the Docker Compose plugin on EC2. On Ubuntu, install the plugin with:
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y docker-compose-plugin
+   sudo docker compose version
+   ```
+
+   The configured SSH user must be able to run `sudo docker compose`. The workflow also supports the legacy `docker-compose` command if that is already installed.
 3. Add these repository secrets under **Settings > Secrets and variables > Actions**:
    - `EC2_HOST`: the instance's public IP or DNS name (for this instance, `3.84.179.236`).
    - `EC2_USER`: the SSH user, such as `ubuntu`.

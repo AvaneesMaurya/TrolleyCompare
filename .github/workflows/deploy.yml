@@ -48,5 +48,19 @@ jobs:
             "$POSTGRES_PASSWORD" "$EC2_HOST" "$EC2_HOST" |
             ssh "${ssh_options[@]}" "$remote" 'umask 077; cat > ~/app/.env'
 
-          ssh "${ssh_options[@]}" "$remote" \
-            'cd ~/app && sudo docker compose up -d --build --remove-orphans && sudo docker compose ps'
+          ssh "${ssh_options[@]}" "$remote" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd ~/app
+
+          if sudo docker compose version >/dev/null 2>&1; then
+            compose=(sudo docker compose)
+          elif sudo docker-compose version >/dev/null 2>&1; then
+            compose=(sudo docker-compose)
+          else
+            echo "Docker Compose is not installed. Install the Docker Compose plugin, then rerun this deployment."
+            exit 1
+          fi
+
+          "${compose[@]}" up -d --build --remove-orphans
+          "${compose[@]}" ps
+          REMOTE
