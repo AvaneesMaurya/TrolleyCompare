@@ -20,15 +20,23 @@ Wait for `http://localhost:9000` to load. Sign in with the initial `admin` / `ad
 
 ## Run analysis
 
-Compile the backend and set the token in the current PowerShell session:
+Set an NVD API key in the current PowerShell session. The key is used by OWASP Dependency-Check to download vulnerability data:
+
+```powershell
+$env:NVD_API_KEY = "paste-your-NVD-API-key-here"
+```
+
+Compile and test the backend, run Dependency-Check, and set the SonarQube token:
 
 ```powershell
 cd backend
-.\mvnw.cmd test
+.\mvnw.cmd verify
 cd ..
 $env:SONAR_TOKEN = "paste-your-project-token-here"
 docker compose -f compose.sonarqube.yml run --rm sonar-scanner
 ```
+
+Request an NVD API key from the [NVD developer portal](https://nvd.nist.gov/developers/request-an-api-key). Keep both tokens private and out of source control.
 
 Open the project dashboard at `http://localhost:9000/dashboard?id=trolleycompare`. The scan covers `backend/src/main/java`, `frontend/src`, and backend tests. Existing build outputs, dependencies, virtual environments, and scanner work files are excluded.
 
@@ -68,6 +76,11 @@ Also add this database credential secret:
 - Name: `SPRING_DATASOURCE_PASSWORD`
 - Value: the PostgreSQL password configured for the CI database
 
+Add an NVD API key so Dependency-Check can download vulnerability data reliably:
+
+- Name: `NVD_API_KEY`
+- Value: an API key from the [NVD](https://nvd.nist.gov/developers/request-an-api-key)
+
 ## 3. Register a self-hosted runner
 
 On the same machine that runs SonarQube:
@@ -80,11 +93,14 @@ On the same machine that runs SonarQube:
 
 The CI pipeline is in [.github/workflows/ci-sonarqube.yml](.github/workflows/ci-sonarqube.yml). It runs on pushes to `main` and performs:
 
-1. Backend compilation and 14 Maven tests.
+1. Backend compilation and Maven tests.
 2. JaCoCo coverage generation.
-3. Frontend ESLint and Vite build.
-4. SonarQube analysis of backend Java and frontend source.
-5. SonarQube quality-gate waiting.
+3. OWASP Dependency-Check scan of backend dependencies.
+4. Frontend ESLint and Vite build.
+5. SonarQube analysis of backend Java and frontend source.
+6. SonarQube quality-gate waiting.
+
+The OWASP Dependency-Check 13 scan writes its report under `backend/target/dependency-check-report.html`. The first run downloads vulnerability data and may take longer than subsequent runs. CI requires the `NVD_API_KEY` repository secret.
 
 ## 4. Run the pipeline
 

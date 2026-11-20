@@ -60,7 +60,8 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-        run: .\mvnw.cmd test
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: .\mvnw.cmd verify
 
       - name: Install frontend dependencies
         working-directory: frontend
