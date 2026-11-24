@@ -55,7 +55,7 @@ jobs:
 
       # 6. Set up Java
       - name: Set up Java
-        uses: actions/setup-java@ddc5e94bde3a6f8c2e2b9a4a8d4e3f2e5b8c4d1a # Replace with verified SHA
+        uses: actions/setup-java@d7793b545071e98d581d3bf084a51c3213318a07 # v4.9.0
         with:
           distribution: temurin
           java-version: "21"
