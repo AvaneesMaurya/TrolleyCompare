@@ -5,7 +5,7 @@ export default function Header({ user, activeView, onShowBasket, onShowHistory, 
         <div className="flex items-center space-x-2">
           <span className="text-xl sm:text-2xl">🛒</span>
           <div>
-            <h5 className="text-sm sm:text-base font-bold tracking-tight leading-none">TrolleyCompare 1234567</h5>
+            <h5 className="text-sm sm:text-base font-bold tracking-tight leading-none">TrolleyCompare</h5>
             <p className="text-[10px] sm:text-[11px] text-indigo-200 mt-0.5">Irish Grocery Price Comparison Engine</p>
           </div>
         </div>
