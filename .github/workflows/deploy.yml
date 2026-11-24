@@ -1,66 +1,74 @@
-name: Deploy TrolleyCompare to AWS
+
+name: Deploy TrolleyCompare to AWS Elastic Beanstalk
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
-  deploy-to-aws:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        shell: bash
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Elastic Beanstalk CLI
         run: |
-          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install awsebcli
 
-          : "${EC2_HOST:?Set the EC2_HOST Actions secret}"
-          : "${EC2_USER:?Set the EC2_USER Actions secret}"
-          : "${EC2_SSH_PRIVATE_KEY:?Set the EC2_SSH_PRIVATE_KEY Actions secret}"
-          : "${EC2_KNOWN_HOSTS:?Set the EC2_KNOWN_HOSTS Actions secret}"
-          : "${POSTGRES_PASSWORD:?Set the POSTGRES_PASSWORD Actions secret}"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
 
-          key_file="$RUNNER_TEMP/ec2_deploy_key"
-          known_hosts_file="$RUNNER_TEMP/ec2_known_hosts"
-          trap 'rm -f "$key_file" "$known_hosts_file"' EXIT
+      - name: Configure Elastic Beanstalk
+        run: |
+          mkdir -p .elasticbeanstalk
 
-          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > "$key_file"
-          chmod 600 "$key_file"
-          printf '%s\n' "$EC2_KNOWN_HOSTS" > "$known_hosts_file"
-          ssh_options=(-i "$key_file" -o UserKnownHostsFile="$known_hosts_file" -o StrictHostKeyChecking=yes)
-          remote="$EC2_USER@$EC2_HOST"
+          cat > .elasticbeanstalk/config.yml <<'EOF'
+          branch-defaults:
+            main:
+              environment: TrolleyCompare-env-2
+          environment-defaults:
+            TrolleyCompare-env-2:
+              branch: main
+              repository: null
+          global:
+            application_name: TrolleyCompare
+            default_region: us-east-1
+            default_platform: Docker running on 64bit Amazon Linux 2023
+            include_git_submodules: true
+            profile: null
+            sc: git
+            workspace_type: Application
+          EOF
 
-          git archive --format=tar HEAD |
-            ssh "${ssh_options[@]}" "$remote" 'mkdir -p ~/app && tar -xf - -C ~/app'
+      - name: Verify AWS access
+        run: |
+          aws sts get-caller-identity
 
-          printf 'POSTGRES_PASSWORD=%s\nVITE_API_ORIGIN=http://%s:8080\nCORS_ALLOWED_ORIGINS=http://%s\n' \
-            "$POSTGRES_PASSWORD" "$EC2_HOST" "$EC2_HOST" |
-            ssh "${ssh_options[@]}" "$remote" 'umask 077; cat > ~/app/.env'
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          eb deploy TrolleyCompare-env-2 --timeout 30
 
-          ssh "${ssh_options[@]}" "$remote" 'bash -s' <<'REMOTE'
-          set -euo pipefail
-          cd ~/app
-
-          if sudo docker compose version >/dev/null 2>&1; then
-            compose=(sudo docker compose)
-          elif sudo docker-compose version >/dev/null 2>&1; then
-            compose=(sudo docker-compose)
-          else
-            echo "Docker Compose is not installed. Install the Docker Compose plugin, then rerun this deployment."
-            exit 1
-          fi
-
-          "${compose[@]}" up -d --build --remove-orphans
-          "${compose[@]}" ps
-          REMOTE
+      - name: Verify deployment
+        run: |
+          aws elasticbeanstalk describe-environments \
+            --environment-names TrolleyCompare-env-2 \
+            --region us-east-1 \
+            --query "Environments[0].[Status,Health,VersionLabel]" \
+            --output table

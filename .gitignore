@@ -25,3 +25,8 @@ Thumbs.db
 
 # SonarQube
 .scannerwork/
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
