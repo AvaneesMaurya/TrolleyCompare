@@ -1,2 +1,27 @@
-.scannerwork/
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+
+# Python virtual environments
+venv/
+venvvenv/
+__pycache__/
+*.py[cod]
+
+# Node.js
+node_modules/
+dist/
+
+# Java / Maven
+target/
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# SonarQube
+.scannerwork/

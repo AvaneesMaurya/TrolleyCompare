@@ -1,5 +1,9 @@
-node_modules
-dist
-.git
+node_modules/
+dist/
+.git/
+.idea/
+.vscode/
+*.log
 .env
-npm-debug.log
+.env.*
+!.env.example
