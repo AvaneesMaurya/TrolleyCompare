@@ -142,6 +142,24 @@ class UserServiceTest {
     }
 
     @Test
+    void registrationAcceptsStructuredEmailAndRejectsWhitespaceOrMultipleAtSigns() {
+        when(users.existsByEmailIgnoreCase("first.last+shop@sub.example.com")).thenReturn(false);
+        when(users.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        UserService service = new UserService(users, passwordEncoder);
+
+        AppUser created = service.register(new CreateUserRequest(
+                "Person", "first.last+shop@sub.example.com", "password123"));
+        assertEquals("first.last+shop@sub.example.com", created.getEmail());
+
+        assertStatus(HttpStatus.BAD_REQUEST, () -> service.register(
+                new CreateUserRequest("Person", "person name@example.com", "password123")));
+        assertStatus(HttpStatus.BAD_REQUEST, () -> service.register(
+                new CreateUserRequest("Person", "person@@example.com", "password123")));
+        assertStatus(HttpStatus.BAD_REQUEST, () -> service.register(
+                new CreateUserRequest("Person", "person@example", "password123")));
+    }
+
+    @Test
     void findAllSortsAccountsByEmailIgnoringCase() {
         AppUser zed = new AppUser("Zed", "zed@example.com", "encoded");
         AppUser alice = new AppUser("Alice", "alice@example.com", "encoded");

@@ -1,0 +1,2 @@
+# AWS currently publishes awsebcli as a source archive only; the generated lock pins its hash.
+awsebcli==3.27.7

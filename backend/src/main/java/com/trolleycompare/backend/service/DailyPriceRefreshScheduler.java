@@ -18,6 +18,8 @@ import java.util.Random;
 @Service
 public class DailyPriceRefreshScheduler {
 
+    private static final Random RANDOM = new Random();
+
     @Autowired
     private ProductRepository productRepository;
 
@@ -56,14 +58,13 @@ public class DailyPriceRefreshScheduler {
         productRepository.deleteAllInBatch();
 
         List<Product> newProducts = new ArrayList<>();
-        Random random = new Random();
         LocalDate today = LocalDate.now();
 
         for (String store : STORES) {
             StoreFactor factor = STORE_FACTORS.get(store);
 
             for (BaseProductInfo base : BASE_ITEMS) {
-                double dailyFluctuation = 0.96 + (0.08 * random.nextDouble());
+                double dailyFluctuation = 0.96 + (0.08 * RANDOM.nextDouble());
 
                 // Calculate regular price
                 double regPrice = Math.round((base.basePrice * factor.regularFactor * dailyFluctuation) * 100.0) / 100.0;
@@ -73,9 +74,9 @@ public class DailyPriceRefreshScheduler {
 
                 // For stores with loyalty programs (Tesco, SuperValu), give ~60% of products a club discount
                 if (store.equals("Tesco") || store.equals("SuperValu")) {
-                    if (random.nextDouble() < 0.6) {
+                    if (RANDOM.nextDouble() < 0.6) {
                         // Club price is 8% to 20% cheaper than regular price
-                        double discountMultiplier = 0.80 + (0.12 * random.nextDouble());
+                        double discountMultiplier = 0.80 + (0.12 * RANDOM.nextDouble());
                         clubPrice = Math.round((regPrice * discountMultiplier) * 100.0) / 100.0;
                     }
                 }

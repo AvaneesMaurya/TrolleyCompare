@@ -143,6 +143,7 @@ jobs:
           python -m pip install \
             --require-hashes \
             --only-binary=:all: \
+            --no-binary=awsebcli \
             -r requirements-ebcli.txt
 
       # 4. Configure AWS credentials

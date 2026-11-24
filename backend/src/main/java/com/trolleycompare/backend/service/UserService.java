@@ -15,12 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 @Service
 public class UserService {
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-
     private final AppUserRepository users;
     private final PasswordEncoder passwordEncoder;
 
@@ -132,10 +129,22 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A valid email is required.");
         }
         String email = value.trim().toLowerCase(Locale.ROOT);
-        if (email.length() > 254 || !EMAIL_PATTERN.matcher(email).matches()) {
+        if (email.length() > 254 || !isValidEmail(email)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A valid email is required.");
         }
         return email;
+    }
+
+    private boolean isValidEmail(String email) {
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 0 || atIndex != email.lastIndexOf('@')) {
+            return false;
+        }
+
+        int domainDotIndex = email.indexOf('.', atIndex + 2);
+        return domainDotIndex >= 0
+                && domainDotIndex < email.length() - 1
+                && email.chars().noneMatch(Character::isWhitespace);
     }
 
     private String validatePassword(String password) {
