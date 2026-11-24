@@ -88,12 +88,22 @@ jobs:
           chmod +x ./mvnw
           ./mvnw --batch-mode test
 
-      # 8. SonarCloud analysis and Quality Gate
+      # 8. Verify SonarCloud token
+      - name: Verify SonarCloud token
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::SONAR_TOKEN is not available to this workflow."
+            exit 1
+          fi
+          echo "SONAR_TOKEN is available."
+
+      # 9. SonarCloud analysis and Quality Gate
       - name: SonarCloud Analysis and Quality Gate
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
             -Dsonar.qualitygate.wait=true
